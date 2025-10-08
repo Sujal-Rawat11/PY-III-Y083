@@ -1,0 +1,142 @@
+{% extends "base/base.html" %}
+{% block start %}
+<section class="section-content padding-y bg">
+  <div class="container">
+    <div class="card">
+      <div class="row no-gutters">
+        <!-- LEFT: Image Gallery -->
+        <aside class="col-md-6">
+          <article class="gallery-wrap">
+            <div class="img-big-wrap mb-2">
+              <div>
+                <img id="main-image" src="/media/{{ product.product_images.first.image }}" class="img-fluid" />
+              </div>
+            </div>
+
+            <!-- Thumbnails -->
+            <div class="thumbs-wrap d-flex gap-2">
+              {% for image in product.product_images.all %}
+              <a href="javascript:void(0);" class="item-thumb">
+                <img src="/media/{{ image.image }}" 
+                     style="width:60px; height:60px; object-fit:cover;" 
+                     onclick="changeMainImage('{{ image.image }}')" />
+              </a>
+              {% endfor %}
+            </div>
+          </article>
+        </aside>
+
+        <!-- RIGHT: Product Info -->
+        <main class="col-md-6 border-left">
+          <article class="content-body">
+            <h2 class="title">{{ product.product_name }}</h2>
+
+            <div class="rating-wrap my-3">
+              <ul class="rating-stars">
+                <li style="width: 80%" class="stars-active">
+                  <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                </li>
+                <li>
+                  <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i>
+                </li>
+              </ul>
+              <small class="label-rating text-muted">132 reviews</small>
+              <small class="label-rating text-success">
+                <i class="fa fa-clipboard-check"></i> 154 orders
+              </small>
+            </div>
+
+            <div class="mb-3">
+              <var class="price h4">${{ product.price }}.00</var>
+              <span class="text-muted">/per kg</span>
+            </div>
+
+            <p>{{ product.product_description }}</p>
+
+            <dl class="row">
+              <dt class="col-sm-3">Model#</dt>
+              <dd class="col-sm-9">Odsy-1000</dd>
+
+              <dt class="col-sm-3">Color</dt>
+              <dd class="col-sm-9">Brown</dd>
+
+              <dt class="col-sm-3">Delivery</dt>
+              <dd class="col-sm-9">Russia, USA, and Europe</dd>
+            </dl>
+
+            <hr />
+
+            <div class="form-row">
+              <!-- Quantity -->
+              <div class="form-group col-md flex-grow-0">
+                <label>Quantity</label>
+                <div class="input-group mb-3 input-spinner">
+                  <div class="input-group-prepend">
+                    <button class="btn btn-light" type="button" onclick="incrementQuantity()">+</button>
+                  </div>
+                  <input type="text" class="form-control" value="1" id="quantity-input"/>
+                  <div class="input-group-append">
+                    <button class="btn btn-light" type="button" onclick="decrementQuantity()">−</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Size Variant -->
+              {% if product.size_variant.count %}
+              <div class="form-group col-md">
+                <label>Select size</label>
+                <div class="mt-1">
+                  {% for size in product.size_variant.all %}
+                  <label class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" name="select_size" class="custom-control-input" {% if forloop.first %}checked{% endif %}/>
+                    <div class="custom-control-label">{{ size.size_name }}</div>
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+            <a href="#" class="btn btn-primary">Buy now</a>
+            <a href="#" class="btn btn-outline-primary">
+              <span class="text">Add to cart</span>
+              <i class="fas fa-shopping-cart"></i>
+            </a>
+
+          </article>
+        </main>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Change main image when thumbnail is clicked
+  function changeMainImage(imagePath) {
+    document.getElementById('main-image').src = '/media/' + imagePath;
+  }
+
+  // Quantity increment/decrement
+  function incrementQuantity() {
+    let input = document.getElementById('quantity-input');
+    input.value = parseInt(input.value) + 1;
+  }
+  function decrementQuantity() {
+    let input = document.getElementById('quantity-input');
+    if(parseInt(input.value) > 1) {
+      input.value = parseInt(input.value) - 1;
+    }
+  }
+
+  // Update size via URL
+  function updateSize(size) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('size', size);
+    window.location.search = params.toString();
+  }
+</script>
+{% endblock %}
