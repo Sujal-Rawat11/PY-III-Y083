@@ -4,12 +4,18 @@
   <div class="container">
     <div class="card">
       <div class="row no-gutters">
+
         <!-- LEFT: Image Gallery -->
         <aside class="col-md-6">
           <article class="gallery-wrap">
             <div class="img-big-wrap mb-2">
               <div>
-                <img id="main-image" src="/media/{{ product.product_images.first.image }}" class="img-fluid" />
+                <img
+                  id="main-image"
+                  src="/media/{{ product.product_images.first.image }}"
+                  class="img-fluid"
+                  alt="{{ product.product_name }}"
+                />
               </div>
             </div>
 
@@ -17,9 +23,11 @@
             <div class="thumbs-wrap d-flex gap-2">
               {% for image in product.product_images.all %}
               <a href="javascript:void(0);" class="item-thumb">
-                <img src="/media/{{ image.image }}" 
-                     style="width:60px; height:60px; object-fit:cover;" 
-                     onclick="changeMainImage('{{ image.image }}')" />
+                <img
+                  src="/media/{{ image.image }}"
+                  style="width: 60px; height: 60px; object-fit: cover"
+                  onclick="changeMainImage('{{ image.image }}')"
+                />
               </a>
               {% endfor %}
             </div>
@@ -51,8 +59,14 @@
             </div>
 
             <div class="mb-3">
-              <var class="price h4">${{ product.price }}.00</var>
-              <span class="text-muted">/per kg</span>
+              <var class="price h4">
+                ₹{% if updated_price %}
+                  {{ updated_price|floatformat:2 }}
+                {% else %}
+                  {{ product.price|floatformat:2 }}
+                {% endif %}
+              </var>
+              <span class="text-muted">/per item</span>
             </div>
 
             <p>{{ product.product_description }}</p>
@@ -61,38 +75,46 @@
               <dt class="col-sm-3">Model#</dt>
               <dd class="col-sm-9">Odsy-1000</dd>
 
-              <dt class="col-sm-3">Color</dt>
-              <dd class="col-sm-9">Brown</dd>
-
               <dt class="col-sm-3">Delivery</dt>
-              <dd class="col-sm-9">Russia, USA, and Europe</dd>
+              <dd class="col-sm-9">India, Europe, and USA</dd>
             </dl>
 
             <hr />
 
+            <!-- Quantity + Size -->
             <div class="form-row">
-              <!-- Quantity -->
               <div class="form-group col-md flex-grow-0">
                 <label>Quantity</label>
                 <div class="input-group mb-3 input-spinner">
                   <div class="input-group-prepend">
-                    <button class="btn btn-light" type="button" onclick="incrementQuantity()">+</button>
-                  </div>
-                  <input type="text" class="form-control" value="1" id="quantity-input"/>
-                  <div class="input-group-append">
                     <button class="btn btn-light" type="button" onclick="decrementQuantity()">−</button>
+                  </div>
+                  <input
+                    type="text"
+                    class="form-control"
+                    value="1"
+                    id="quantity-input"
+                  />
+                  <div class="input-group-append">
+                    <button class="btn btn-light" type="button" onclick="incrementQuantity()">+</button>
                   </div>
                 </div>
               </div>
 
-              <!-- Size Variant -->
               {% if product.size_variant.count %}
               <div class="form-group col-md">
                 <label>Select size</label>
                 <div class="mt-1">
                   {% for size in product.size_variant.all %}
                   <label class="custom-control custom-radio custom-control-inline">
-                    <input type="radio" name="select_size" class="custom-control-input" {% if forloop.first %}checked{% endif %}/>
+                    <input 
+                      type="radio"
+                      name="select_size"
+                      value="{{ size.size_name }}"
+                      onchange="get_correct_price('{{ size.size_name }}')"
+                      class="custom-control-input"
+                      {% if selected_size == size.size_name %}checked{% endif %}
+                    />
                     <div class="custom-control-label">{{ size.size_name }}</div>
                   </label>
                   {% endfor %}
@@ -101,11 +123,28 @@
               {% endif %}
             </div>
 
-            <a href="#" class="btn btn-primary">Buy now</a>
-            <a href="#" class="btn btn-outline-primary">
-              <span class="text">Add to cart</span>
-              <i class="fas fa-shopping-cart"></i>
-            </a>
+            <!-- Buttons -->
+            <div class="mt-3">
+              <!-- Add to Cart -->
+              <a 
+                id="addToCartBtn"
+                href="#"
+                class="btn btn-outline-primary"
+                onclick="addToCart('{{ product.uid }}')"
+              >
+                <span class="text">Add to Cart</span>
+                <i class="fas fa-shopping-cart"></i>
+              </a>
+
+              <!-- Buy Now -->
+              <a 
+                href="#"
+                class="btn btn-primary"
+                onclick="buyNow('{{ product.uid }}')"
+              >
+                Buy Now
+              </a>
+            </div>
 
           </article>
         </main>
@@ -115,28 +154,46 @@
 </section>
 
 <script>
-  // Change main image when thumbnail is clicked
+  // Add to Cart
+  function addToCart(uid) {
+    const qty = document.getElementById("quantity-input").value;
+    const selectedSize = document.querySelector("input[name='select_size']:checked");
+    const sizeValue = selectedSize ? selectedSize.value : '';
+
+    const url = `/accounts/add-to-cart/${uid}/?variant=${sizeValue}&quantity=${qty}`;
+    window.location.href = url;
+  }
+
+  // Buy Now (add to cart and redirect to cart)
+  function buyNow(uid) {
+    const qty = document.getElementById("quantity-input").value;
+    const selectedSize = document.querySelector("input[name='select_size']:checked");
+    const sizeValue = selectedSize ? selectedSize.value : '';
+
+    const url = `/accounts/buy-now/${uid}/?variant=${sizeValue}&quantity=${qty}`;
+    window.location.href = url;
+  }
+
+  // Change main image
   function changeMainImage(imagePath) {
-    document.getElementById('main-image').src = '/media/' + imagePath;
+    document.getElementById("main-image").src = `/media/${imagePath}`;
+  }
+
+  // Select size triggers page reload with price update
+  function get_correct_price(size) {
+    window.location.href = window.location.pathname + `?size=${size}`;
   }
 
   // Quantity increment/decrement
   function incrementQuantity() {
-    let input = document.getElementById('quantity-input');
-    input.value = parseInt(input.value) + 1;
-  }
-  function decrementQuantity() {
-    let input = document.getElementById('quantity-input');
-    if(parseInt(input.value) > 1) {
-      input.value = parseInt(input.value) - 1;
-    }
+    const qty = document.getElementById("quantity-input");
+    qty.value = parseInt(qty.value) + 1;
   }
 
-  // Update size via URL
-  function updateSize(size) {
-    const params = new URLSearchParams(window.location.search);
-    params.set('size', size);
-    window.location.search = params.toString();
+  function decrementQuantity() {
+    const qty = document.getElementById("quantity-input");
+    if (parseInt(qty.value) > 1) qty.value = parseInt(qty.value) - 1;
   }
 </script>
+
 {% endblock %}

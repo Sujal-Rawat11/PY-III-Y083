@@ -1,0 +1,67 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block start %}
+<section class="section-content padding-y bg">
+    <div class="container">
+        <div class="row">
+            <!-- Checkout Main -->
+            <main class="col-md-9">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Checkout</h4>
+                        {% if cart_items %}
+                        <table class="table table-borderless">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th class="text-right">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart_items %}
+                                <tr>
+                                    <td>{{ item.product.product_name }} (Size: {{ item.size_variant.size_name }})</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td class="text-right">₹{{ item.get_total_price|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <hr>
+                        <dl class="dlist-align">
+                            <dt>Subtotal:</dt>
+                            <dd class="text-right">₹{{ total_price|floatformat:2 }}</dd>
+                        </dl>
+                        {% if discount_amount %}
+                        <dl class="dlist-align">
+                            <dt>Discount:</dt>
+                            <dd class="text-right text-success">-₹{{ discount_amount|floatformat:2 }}</dd>
+                        </dl>
+                        {% endif %}
+                        <dl class="dlist-align">
+                            <dt>Total:</dt>
+                            <dd class="text-right h5"><strong>₹{{ total_price_with_discount|floatformat:2 }}</strong></dd>
+                        </dl>
+
+                        <hr>
+                        <form method="POST" action="{% url 'place_order' %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label>Shipping Address</label>
+                                <textarea name="shipping_address" class="form-control" placeholder="Enter your address" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary float-right">Place Order</button>
+                        </form>
+                        {% else %}
+                        <p>Your cart is empty. <a href="/" class="btn btn-sm btn-primary">Go shopping</a></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</section>
+{% endblock %}

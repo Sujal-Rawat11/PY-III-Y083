@@ -1,0 +1,132 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block start %}
+<section class="section-content padding-y bg">
+  <div class="container">
+    <div class="row">
+      <!-- Main Cart -->
+      <main class="col-md-9">
+        <div class="card">
+          <table class="table table-borderless table-shopping-cart">
+            <thead class="text-muted">
+              <tr class="small text-uppercase">
+                <th scope="col">Product</th>
+                <th scope="col" width="120">Quantity</th>
+                <th scope="col" width="120">Price</th>
+                <th scope="col" class="text-right" width="200">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in cart_items %}
+              <tr>
+                <!-- Product Info -->
+                <td>
+                  <figure class="itemside">
+                    <div class="aside">
+                      <img src="{% if item.product.product_images.first %}{{ item.product.product_images.first.image.url }}{% else %}{% static 'images/default.png' %}{% endif %}"
+                        class="img-sm" alt="{{ item.product.product_name }}">
+                    </div>
+                    <figcaption class="info">
+                      <a href="#" class="title text-dark">{{ item.product.product_name }}</a>
+                      <p class="text-muted small">
+                        {% if item.size_variant %}Size: {{ item.size_variant.size_name }}{% endif %}
+                      </p>
+                    </figcaption>
+                  </figure>
+                </td>
+
+                <!-- Quantity -->
+                <td>
+                  <form method="POST" action="{% url 'accounts:update_cart' item.id %}">
+                    {% csrf_token %}
+                    <select name="quantity" class="form-control" onchange="this.form.submit()">
+                      {% for i in 1|to:10 %}
+                      <option value="{{ i }}" {% if i == item.quantity %}selected{% endif %}>{{ i }}</option>
+                      {% endfor %}
+                    </select>
+                  </form>
+                </td>
+
+                <!-- Price -->
+                <td>
+                  <div class="price-wrap">
+                    <var class="price">₹{{ item.get_total_price|floatformat:2 }}</var>
+                    <small class="text-muted">₹{{ item.product.price|floatformat:2 }} each</small>
+                  </div>
+                </td>
+
+                <!-- Remove -->
+                <td class="text-right">
+                  <form method="POST" action="{% url 'accounts:remove_cart_item' item.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-light btn-sm">Remove</button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">
+                  Your cart is empty.
+                  <a href="/" class="btn btn-sm btn-primary ml-2">Go shopping</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!-- Cart Footer -->
+          <div class="card-body border-top">
+            <a href="/" class="btn btn-light">Continue shopping</a>
+          </div>
+        </div>
+      </main>
+
+      <!-- Sidebar: Coupon & Totals -->
+      <aside class="col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <!-- Coupon Form -->
+            <form method="POST" action="{% url 'accounts:apply_coupon' %}">
+              {% csrf_token %}
+              <div class="form-group">
+                <label>Have coupon?</label>
+                <div class="input-group">
+                  <input type="text" name="coupon" class="form-control" placeholder="Coupon code">
+                  <span class="input-group-append">
+                    <button class="btn btn-primary" type="submit">Apply</button>
+                  </span>
+                </div>
+              </div>
+            </form>
+
+            {% if messages %}
+              {% for message in messages %}
+                <small class="d-block text-{{ message.tags }}">{{ message }}</small>
+              {% endfor %}
+            {% endif %}
+
+            <hr>
+            <!-- Totals -->
+            <dl class="dlist-align">
+              <dt>Subtotal:</dt>
+              <dd class="text-right">₹{{ subtotal|floatformat:2 }}</dd>
+            </dl>
+            {% if discount > 0 %}
+            <dl class="dlist-align">
+              <dt>Discount:</dt>
+              <dd class="text-right text-success">-₹{{ discount|floatformat:2 }}</dd>
+            </dl>
+            {% endif %}
+            <hr>
+            <dl class="dlist-align">
+              <dt>Total:</dt>
+              <dd class="text-right h5"><strong>₹{{ total|floatformat:2 }}</strong></dd>
+            </dl>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}
